@@ -52,7 +52,7 @@ def get_readable_time(seconds: int) -> str:
 
 PM_START_TEXT = """
 Hi {}, my name is {}! 
-I'm a group manager bot.Rent me for your group if you want😃😃.
+I'm a group manager bot. Rent me for your group if you want🥰.
 You can find my list of available commands with /help.
 """
 
@@ -74,10 +74,10 @@ And the following:
     dispatcher.bot.first_name, ""
     if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
 
-PRINCY_IMG = "https://telegra.ph/file/2db636b075b8d25748097.jpg"
+ALICIA_IMG = "https://telegra.ph/file/2db636b075b8d25748097.jpg"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
-Princy is hosted on one of Kaizoku's Servers and doesn't require any donations as of now but \
+Alicia is hosted on one of Kaizoku's Servers and doesn't require any donations as of now but \
 You can donate to the original writer of the Base code, Paul
 There are two ways of supporting him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
 
@@ -188,7 +188,7 @@ def start(update: Update, context: CallbackContext):
         else:
             first_name = update.effective_user.first_name
             update.effective_message.reply_photo(
-                PRINCY_IMG,
+                ALICIA_IMG,
                 PM_START_TEXT.format(
                     escape_markdown(first_name),
                     escape_markdown(context.bot.first_name)),
@@ -197,7 +197,7 @@ def start(update: Update, context: CallbackContext):
                 reply_markup=InlineKeyboardMarkup(
                     [[
                         InlineKeyboardButton(
-                            text="☑️ Add Princy to your group",
+                            text="☑️ Add Alicia to your group",
                             url="t.me/{}?startgroup=true".format(
                                 context.bot.username))
                     ],
@@ -207,7 +207,7 @@ def start(update: Update, context: CallbackContext):
                              url=f"https://t.me/{SUPPORT_CHAT}"),
                          InlineKeyboardButton(
                              text="🔔 Updates Channel",
-                             url="https://t.me/PrincyUpdates")
+                             url="https://t.me/MafiaBot_Support")
                      ]
                     ]))
     else:
