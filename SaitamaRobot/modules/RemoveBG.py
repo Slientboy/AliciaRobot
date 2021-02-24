@@ -10,13 +10,13 @@ from telegram.ext import MessageHandler, Filters
 from telegram.ext import Updater
 
 config = configparser.ConfigParser()
-config.read('token.ini')
+config.read('TOKEN.ini')
 
-token = str(config['DEFAULT']['token'])
+TOKEN = str(config['DEFAULT']['TOKEN'])
 gis = GoogleImagesSearch(str(config['DEFAULT']['google1']), str(config['DEFAULT']['google2']))
 apiKey = str(config['DEFAULT']['removebgKey'])
 
-updater = Updater(token=token, use_context=True)
+updater = Updater(TOKEN=TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
