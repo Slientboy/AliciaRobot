@@ -17,7 +17,6 @@ psutil
 aiohttp>=2.2.5
 Pillow>=4.2.0
 CurrencyConverter
-GoogleImagesSearch
 google_images_search
 googletrans
 google_trans_new
