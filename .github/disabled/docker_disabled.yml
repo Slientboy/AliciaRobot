@@ -20,11 +20,11 @@ jobs:
 
       - uses: actions/checkout@master
       - run:  bash exp.sh
-      - uses: elgohr/Publish-Docker-Github-Action@master
+      - uses: H1M4N5HU0P/Publish-Docker-Github-Action@master
 
         with:
 
-          name:  animekaizoku/saitamarobot
+          name:  H1M4N5HU0P/AliciaRobot
 
           username: ${{ secrets.DOCKER_USERNAME }}
 
