@@ -171,7 +171,7 @@ def del_fed(update: Update, context: CallbackContext):
             [
                 [
                     InlineKeyboardButton(
-                        text="?ая? Delete Federation ?ая?",
+                        text="Delete Federation",
                         callback_data="rmfed_{}".format(fed_id),
                     )
                 ],
