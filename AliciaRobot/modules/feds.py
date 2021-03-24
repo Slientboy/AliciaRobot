@@ -14,7 +14,7 @@ from telegram import ParseMode, Update, Bot, Chat, User, MessageEntity, InlineKe
 from telegram.ext import run_async, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 from telegram.utils.helpers import escape_markdown, mention_html, mention_markdown
 
-from AliciaRobot import dispatcher, OWNER_ID, SUDO_USERS, WHITELIST_USERS, MESSAGE_DUMP, LOGGER
+from AliciaRobot import dispatcher, EVENT_LOGS, LOGGER, OWNER_ID, DRAGONS, TIGERS, WOLVES
 from AliciaRobot.modules.helper_funcs.handlers import CMD_STARTERS
 from AliciaRobot.modules.helper_funcs.misc import is_module_loaded, send_to_list
 from AliciaRobot.modules.helper_funcs.chat_status import is_user_admin
