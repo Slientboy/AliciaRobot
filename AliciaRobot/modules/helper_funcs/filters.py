@@ -1,7 +1,7 @@
 from telegram import Message
 from telegram.ext import BaseFilter
 
-from AliciaRobot import SUPPORT_USERS, SUDO_USERS
+from AliciaRobot import OWNER_ID, DRAGONS, TIGERS, WOLVES
 
 
 class CustomFilters(object):
