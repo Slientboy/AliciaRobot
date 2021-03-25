@@ -14,6 +14,7 @@ class Permissions(BASE):
     voice = Column(Boolean, default=False)
     contact = Column(Boolean, default=False)
     video = Column(Boolean, default=False)
+    videonote = Column(Boolean, default=False)
     document = Column(Boolean, default=False)
     photo = Column(Boolean, default=False)
     sticker = Column(Boolean, default=False)
@@ -23,10 +24,6 @@ class Permissions(BASE):
     forward = Column(Boolean, default=False)
     game = Column(Boolean, default=False)
     location = Column(Boolean, default=False)
-    rtl = Column(Boolean, default=False)
-    button = Column(Boolean, default=False)
-    egame = Column(Boolean, default=False)
-    inline = Column(Boolean, default=False)
 
     def __init__(self, chat_id):
         self.chat_id = str(chat_id)  # ensure string
@@ -34,6 +31,7 @@ class Permissions(BASE):
         self.voice = False
         self.contact = False
         self.video = False
+        self.videonote = False
         self.document = False
         self.photo = False
         self.sticker = False
@@ -43,10 +41,6 @@ class Permissions(BASE):
         self.forward = False
         self.game = False
         self.location = False
-        self.rtl = False
-        self.button = False
-        self.egame = False
-        self.inline = False
 
     def __repr__(self):
         return "<Permissions for %s>" % self.chat_id
@@ -72,12 +66,9 @@ class Restrictions(BASE):
         return "<Restrictions for %s>" % self.chat_id
 
 
-# For those who faced database error, Just uncomment the
-# line below and run bot for 1 time & remove that line!
-
 Permissions.__table__.create(checkfirst=True)
-# Permissions.__table__.drop()
 Restrictions.__table__.create(checkfirst=True)
+
 
 PERM_LOCK = threading.RLock()
 RESTR_LOCK = threading.RLock()
@@ -119,6 +110,8 @@ def update_lock(chat_id, lock_type, locked):
             curr_perm.contact = locked
         elif lock_type == "video":
             curr_perm.video = locked
+        elif lock_type == "videonote":
+            curr_perm.videonote = locked
         elif lock_type == "document":
             curr_perm.document = locked
         elif lock_type == "photo":
@@ -127,24 +120,16 @@ def update_lock(chat_id, lock_type, locked):
             curr_perm.sticker = locked
         elif lock_type == "gif":
             curr_perm.gif = locked
-        elif lock_type == "url":
+        elif lock_type == 'url':
             curr_perm.url = locked
-        elif lock_type == "bots":
+        elif lock_type == 'bots':
             curr_perm.bots = locked
-        elif lock_type == "forward":
+        elif lock_type == 'forward':
             curr_perm.forward = locked
-        elif lock_type == "game":
+        elif lock_type == 'game':
             curr_perm.game = locked
-        elif lock_type == "location":
+        elif lock_type == 'location':
             curr_perm.location = locked
-        elif lock_type == "rtl":
-            curr_perm.rtl = locked
-        elif lock_type == "button":
-            curr_perm.button = locked
-        elif lock_type == "egame":
-            curr_perm.egame = locked
-        elif lock_type == "inline":
-            curr_perm.inline = locked
 
         SESSION.add(curr_perm)
         SESSION.commit()
@@ -192,6 +177,8 @@ def is_locked(chat_id, lock_type):
         return curr_perm.contact
     elif lock_type == "video":
         return curr_perm.video
+    elif lock_type == "videonote":
+        return curr_perm.videonote
     elif lock_type == "document":
         return curr_perm.document
     elif lock_type == "gif":
@@ -206,14 +193,6 @@ def is_locked(chat_id, lock_type):
         return curr_perm.game
     elif lock_type == "location":
         return curr_perm.location
-    elif lock_type == "rtl":
-        return curr_perm.rtl
-    elif lock_type == "button":
-        return curr_perm.button
-    elif lock_type == "egame":
-        return curr_perm.egame
-    elif lock_type == "inline":
-        return curr_perm.inline
 
 
 def is_restr_locked(chat_id, lock_type):
@@ -232,12 +211,7 @@ def is_restr_locked(chat_id, lock_type):
     elif lock_type == "previews":
         return curr_restr.preview
     elif lock_type == "all":
-        return (
-            curr_restr.messages
-            and curr_restr.media
-            and curr_restr.other
-            and curr_restr.preview
-        )
+        return curr_restr.messages and curr_restr.media and curr_restr.other and curr_restr.preview
 
 
 def get_locks(chat_id):
