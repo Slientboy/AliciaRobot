@@ -32,6 +32,7 @@ wikipedia
 malclient
 tswift
 telethon==1.16.4
+telegram
 mtranslate
 fontTools
 spamwatch
