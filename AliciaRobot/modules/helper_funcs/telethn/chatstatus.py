@@ -1,11 +1,13 @@
-from AliciaRobot.modules.helper_funcs.telethn import IMMUNE_USERS, telethn
-from AliciaRobot import DRAGONS
 from telethon.tl.types import ChannelParticipantsAdmins
+from AliciaRobot import DRAGONS, WOLVES, DEMONS, TIGERS, DEV_USERS
+from AliciaRobot.modules.helper_funcs.telethn import HIGHER_AUTH, telethn
 
 
 async def user_is_ban_protected(user_id: int, message):
     status = False
-    if message.is_private or user_id in (IMMUNE_USERS):
+    if message.is_private or user_id in (
+        HIGHER_AUTH + DRAGONS + WOLVES + DEMONS + TIGERS + DEV_USERS
+    ):
         return True
 
     async for user in telethn.iter_participants(
@@ -25,7 +27,7 @@ async def user_is_admin(user_id: int, message):
     async for user in telethn.iter_participants(
         message.chat_id, filter=ChannelParticipantsAdmins
     ):
-        if user_id == user.id or user_id in DRAGONS:
+        if user_id == user.id or user_id in HIGHER_AUTH:
             status = True
             break
     return status
@@ -36,19 +38,19 @@ async def is_user_admin(user_id: int, chat_id):
     async for user in telethn.iter_participants(
         chat_id, filter=ChannelParticipantsAdmins
     ):
-        if user_id == user.id or user_id in DRAGONS:
+        if user_id == user.id or user_id in HIGHER_AUTH:
             status = True
             break
     return status
 
 
-async def saitama_is_admin(chat_id: int):
+async def haruka_is_admin(chat_id: int):
     status = False
-    saitama = await telethn.get_me()
+    haruka = await telethn.get_me()
     async for user in telethn.iter_participants(
         chat_id, filter=ChannelParticipantsAdmins
     ):
-        if saitama.id == user.id:
+        if haruka.id == user.id:
             status = True
             break
     return status
@@ -99,11 +101,7 @@ async def can_add_admins(message):
 
 
 async def can_delete_messages(message):
-
-    if message.is_private:
-        return True
-    elif message.chat.admin_rights:
+    status = False
+    if message.chat.admin_rights:
         status = message.chat.admin_rights.delete_messages
-        return status
-    else:
-        return False
+    return status
