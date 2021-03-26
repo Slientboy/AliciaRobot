@@ -48,6 +48,8 @@ from telegram.ext.dispatcher import DispatcherHandlerStop, run_async
 from telegram.utils.helpers import escape_markdown
 
 
+
+
 def get_readable_time(seconds: int) -> str:
     count = 0
     ping_time = ""
@@ -56,7 +58,10 @@ def get_readable_time(seconds: int) -> str:
 
     while count < 4:
         count += 1
-        remainder, result = divmod(seconds, 60) if count < 3 else divmod(seconds, 24)
+        if count < 3:
+            remainder, result = divmod(seconds, 60)
+        else:
+            remainder, result = divmod(seconds, 24)
         if seconds == 0 and remainder == 0:
             break
         time_list.append(int(result))
@@ -74,45 +79,35 @@ def get_readable_time(seconds: int) -> str:
 
 
 PM_START_TEXT = """
-`Hellow` [🤗](https://telegra.ph/file/6937614341f42020a2ebc.jpg) `My name is` *Alicia*
-`I'm here to help you manage your groups! Hit` *📚Commands* `button below to find out more about how to use me to my full potential.` 
+Hi {}, my name is {}! 
+I'm a group manager bot. Rent me for your group if you want🥰.
+You can find my list of available commands with /help.
 """
 
-buttons = [
-    [
-        InlineKeyboardButton(
-            text="➕️ ADD Alicia TO YOUR GROUP ➕️", url="t.me/AliciaRobot?startgroup=true"),
-    ],
-    [
-        InlineKeyboardButton(text="🚨ADMINS", callback_data="adminmenu_"),
-        InlineKeyboardButton(text="👒USERS", callback_data="usermenu_"),
-        InlineKeyboardButton(text="🛡DEVS", callback_data="devmenu_"),
-    ],
-    [
-        InlineKeyboardButton(text="ℹ️ ABOUT", callback_data="Alicia_"),
-        InlineKeyboardButton(text="📚 COMMANDS", callback_data="help_back"),
-    ],
-    [
-        InlineKeyboardButton(
-            text="💾 SOURCE", callback_data="source_"),
-        InlineKeyboardButton(
-            text="👥 SUPPORT", url="https://t.me/wastebots"
-        ),
-    ],
-]
-
-
 HELP_STRINGS = """
-`Hi.. I'm` [Alicia🙋‍♀️](https://telegra.ph/file/6937614341f42020a2ebc.jpg)
-`Click on the buttons below to get documentation about specific modules..`"""
+Hey there! My name is *{}*.
+I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of the things I can help you with.
+
+*Main* commands available:
+ • /help: PM's you this message.
+ • /help <module name>: PM's you info about that module.
+ • /settings:
+   • in PM: will send you your settings for all supported modules.
+   • in a group: will redirect you to pm, with all that chat's settings.
 
 
-ALICIA_IMG = "https://telegra.ph/file/6937614341f42020a2ebc.jpg"
+{}
+And the following:
+""".format(
+    dispatcher.bot.first_name, ""
+    if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
+
+ALICIA_IMG = "https://telegra.ph/file/2db636b075b8d25748097.jpg"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
- You can support the project via [Paypal](ko-fi.com/sawada) or by contacting @Sawada \
- Supporting isnt always financial! \
- Those who cannot provide monetary support are welcome to help us develop the bot at @OnePunchDev."""
+Alicia is hosted on one of Kaizoku's Servers and doesn't require any donations as of now but \
+You can donate to the original writer of the Base code, Paul
+There are two ways of supporting him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
 
 IMPORTED = {}
 MIGRATEABLE = []
@@ -190,43 +185,63 @@ def start(update: Update, context: CallbackContext):
             if args[0].lower() == "help":
                 send_help(update.effective_chat.id, HELP_STRINGS)
             elif args[0].lower().startswith("ghelp_"):
-                mod = args[0].lower().split("_", 1)[1]
+                mod = args[0].lower().split('_', 1)[1]
                 if not HELPABLE.get(mod, False):
                     return
                 send_help(
-                    update.effective_chat.id,
-                    HELPABLE[mod].__help__,
-                    InlineKeyboardMarkup(
-                        [[InlineKeyboardButton(text="⬅️ BACK", callback_data="help_back")]]
-                    ),
-                )
-
+                    update.effective_chat.id, HELPABLE[mod].__help__,
+                    InlineKeyboardMarkup([[
+                        InlineKeyboardButton(
+                            text="Back", callback_data="help_back")
+                    ]]))
+            elif args[0].lower() == "markdownhelp":
+                IMPORTED["extras"].markdown_help_sender(update)
+            elif args[0].lower() == "disasters":
+                IMPORTED["disasters"].send_disasters(update)
             elif args[0].lower().startswith("stngs_"):
                 match = re.match("stngs_(.*)", args[0].lower())
                 chat = dispatcher.bot.getChat(match.group(1))
 
                 if is_user_admin(chat, update.effective_user.id):
-                    send_settings(match.group(1), update.effective_user.id, False)
+                    send_settings(
+                        match.group(1), update.effective_user.id, False)
                 else:
-                    send_settings(match.group(1), update.effective_user.id, True)
+                    send_settings(
+                        match.group(1), update.effective_user.id, True)
 
             elif args[0][1:].isdigit() and "rules" in IMPORTED:
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
-            update.effective_message.reply_text(
-                PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
+            first_name = update.effective_user.first_name
+            update.effective_message.reply_photo(
+                ALICIA_IMG,
+                PM_START_TEXT.format(
+                    escape_markdown(first_name),
+                    escape_markdown(context.bot.first_name)),
                 parse_mode=ParseMode.MARKDOWN,
-                timeout=60,
-            )
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(
+                    [[
+                        InlineKeyboardButton(
+                            text="☑️ Add Alicia to your group",
+                            url="t.me/{}?startgroup=true".format(
+                                context.bot.username))
+                    ],
+                     [
+                         InlineKeyboardButton(
+                             text="🚑 Support Group",
+                             url=f"https://t.me/{SUPPORT_CHAT}"),
+                         InlineKeyboardButton(
+                             text="🔔 Updates Channel",
+                             url="https://t.me/MafiaBot_Support")
+                     ]
+                    ]))
     else:
         update.effective_message.reply_text(
-            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>".format(
-                uptime
-            ),
-            parse_mode=ParseMode.HTML,
-        )
+            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>"
+            .format(uptime),
+            parse_mode=ParseMode.HTML)
 
 
 def error_handler(update, context):
@@ -350,98 +365,8 @@ def help_button(update, context):
 
     except BadRequest:
         pass
-
-
-@run_async
-def Alicia_about_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    if query.data == "Alicia_":
-        query.message.edit_text(
-            text=""" ℹ️ I'm *Alicia*, a powerful group management bot built to help you manage your group easily.
-                 \n❍ I can restrict users.
-                 \n❍ I can greet users with customizable welcome messages and even set a group's rules.
-                 \n❍ I have an advanced anti-flood system.
-                 \n❍ I can warn users until they reach max warns, with each predefined actions such as ban, mute, kick, etc.
-                 \n❍ I have a note keeping system, blacklists, and even predetermined replies on certain keywords.
-                 \n❍ I check for admins' permissions before executing any command and more stuffs
-                 \n\n_Alicia's licensed under the GNU General Public License v3.0_
-                 \nHere is the [💾Repository](https://github.com/Mr-Dark-Prince/AliciaRobot).
-                 \n\nIf you have any question about Alicia, let us know at @WasteBots.""",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                 [
-                    InlineKeyboardButton(text="Back", callback_data="Alicia_back")
-                 ]
-                ]
-            ),
-        )
-    elif query.data == "Alicia_back":
-        query.message.edit_text(
-                PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
-                parse_mode=ParseMode.MARKDOWN,
-                timeout=60,
-                disable_web_page_preview=False,
-        )
-
-
-@run_async
-def Admin_about_callback(update, context):
-    query = update.callback_query
-    if query.data == "adminmenu_":
-        query.message.edit_text(
-            text=f"ADMIN MODULES",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="ℹ️GROUP", callback_data="group_cmds"
-                        ),
-                        InlineKeyboardButton(
-                            text="BASIC", callback_data="basic_cmds"
-                        ),
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text="❔Help & Commands", callback_data="help_back"
-                        )
-                    ],
-                    [InlineKeyboardButton(text="Back", callback_data="Alicia_back")],
-                ]
-            ),
-        )
-
-
-@run_async
-def Source_about_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    if query.data == "source_":
-        query.message.edit_text(
-            text=""" Hi..🤗 I'm *Alicia*
-                 \nHere is the [Source Code](https://github.com/Mr-Dark-Prince/AliciaRobot) .""",
-            parse_mode=ParseMode.MARKDOWN,
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                 [
-                    InlineKeyboardButton(text="Go Back", callback_data="source_back")
-                 ]
-                ]
-            ),
-        )
-    elif query.data == "source_back":
-        query.message.edit_text(
-                PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
-                parse_mode=ParseMode.MARKDOWN,
-                timeout=60,
-                disable_web_page_preview=False,
-        )
-
+        
+        
 @run_async
 def get_help(update: Update, context: CallbackContext):
     chat = update.effective_chat  # type: Optional[Chat]
@@ -717,7 +642,7 @@ def main():
 
     if SUPPORT_CHAT is not None and isinstance(SUPPORT_CHAT, str):
         try:
-            dispatcher.bot.sendMessage(f"@{SUPPORT_CHAT}", "Yes I'm alive 😹")
+            dispatcher.bot.sendMessage(f"@{SUPPORT_CHAT}", "Yes I'm alive!")
         except Unauthorized:
             LOGGER.warning(
                 "Bot isnt able to send message to support_chat, go and check!"
@@ -729,14 +654,12 @@ def main():
     start_handler = CommandHandler("start", start)
 
     help_handler = CommandHandler("help", get_help)
-    help_callback_handler = CallbackQueryHandler(help_button, pattern=r"help_.*")
+    help_callback_handler = CallbackQueryHandler(
+        help_button, pattern=r"help_.*")
 
     settings_handler = CommandHandler("settings", get_settings)
-    settings_callback_handler = CallbackQueryHandler(settings_button, pattern=r"stngs_")
-
-    about_callback_handler = CallbackQueryHandler(Alicia_about_callback, pattern=r"Alicia_")
-    source_callback_handler = CallbackQueryHandler(Source_about_callback, pattern=r"source_")
-    admin_callback_handler = CallbackQueryHandler(Admin_about_callback, pattern=r"adminmenu_")
+    settings_callback_handler = CallbackQueryHandler(
+        settings_button, pattern=r"stngs_")
 
     donate_handler = CommandHandler("donate", donate)
     migrate_handler = MessageHandler(Filters.status_update.migrate, migrate_chats)
@@ -744,14 +667,12 @@ def main():
     # dispatcher.add_handler(test_handler)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(about_callback_handler)
-    dispatcher.add_handler(source_callback_handler)
-    dispatcher.add_handler(admin_callback_handler)
     dispatcher.add_handler(settings_handler)
     dispatcher.add_handler(help_callback_handler)
     dispatcher.add_handler(settings_callback_handler)
     dispatcher.add_handler(migrate_handler)
     dispatcher.add_handler(donate_handler)
+
 
     dispatcher.add_error_handler(error_callback)
 
