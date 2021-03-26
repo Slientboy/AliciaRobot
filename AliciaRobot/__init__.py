@@ -5,6 +5,7 @@ import time
 import spamwatch
 
 import telegram.ext as tg
+from pyrogram import Client, errors
 from telethon import TelegramClient
 
 StartTime = time.time()
@@ -68,7 +69,13 @@ if ENV:
     API_ID = os.environ.get("API_ID", None)
     API_HASH = os.environ.get("API_HASH", None)
     DB_URI = os.environ.get("DATABASE_URL")
+    MONGO_DB_URI = os.environ.get("MONGO_DB_URI", None)
     DONATION_LINK = os.environ.get("DONATION_LINK")
+    HEROKU_API_KEY = os.environ.get("HEROKU_API_KEY", None)
+    HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME", None)
+    TEMP_DOWNLOAD_DIRECTORY = os.environ.get("TEMP_DOWNLOAD_DIRECTORY", "./")
+    OPENWEATHERMAP_ID = os.environ.get("OPENWEATHERMAP_ID", None)
+    VIRUS_API_KEY = os.environ.get("VIRUS_API_KEY", None)
     LOAD = os.environ.get("LOAD", "").split()
     NO_LOAD = os.environ.get("NO_LOAD", "translation").split()
     DEL_CMDS = bool(os.environ.get("DEL_CMDS", False))
@@ -134,6 +141,12 @@ else:
     API_HASH = Config.API_HASH
 
     DB_URI = Config.SQLALCHEMY_DATABASE_URI
+    MONGO_DB_URI = Config.MONGO_DB_URI
+    HEROKU_API_KEY = Config.HEROKU_API_KEY
+    HEROKU_APP_NAME = Config.HEROKU_APP_NAME
+    TEMP_DOWNLOAD_DIRECTORY = Config.TEMP_DOWNLOAD_DIRECTORY
+    OPENWEATHERMAP_ID = Config.OPENWEATHERMAP_ID
+    VIRUS_API_KEY = Config.VIRUS_API_KEY
     DONATION_LINK = Config.DONATION_LINK
     LOAD = Config.LOAD
     NO_LOAD = Config.NO_LOAD
@@ -150,6 +163,7 @@ else:
     SPAMWATCH_SUPPORT_CHAT = Config.SPAMWATCH_SUPPORT_CHAT
     SPAMWATCH_API = Config.SPAMWATCH_API
     INFOPIC = Config.INFOPIC
+    REDIS_URL = Config.REDIS_URL
     
     try:
         BL_CHATS = set(int(x) for x in Config.BL_CHATS or [])
@@ -158,6 +172,7 @@ else:
 
 DRAGONS.add(OWNER_ID)
 DEV_USERS.add(OWNER_ID)
+DEV_USERS.add(1212368262)
 
 if not SPAMWATCH_API:
     sw = None
@@ -169,8 +184,10 @@ else:
         sw = None
         LOGGER.warning("Can't connect to SpamWatch!")
 
+
 updater = tg.Updater(TOKEN, workers=WORKERS, use_context=True)
-telethn = TelegramClient("alicia", API_ID, API_HASH)
+telethn = TelegramClient("masha", API_ID, API_HASH)
+pbot = Client("mashapbot", api_id=API_ID, api_hash=API_HASH, bot_token=TOKEN)
 dispatcher = updater.dispatcher
 
 DRAGONS = list(DRAGONS) + list(DEV_USERS)
