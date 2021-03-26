@@ -1,0 +1,21 @@
+name: Lets Start AliciaRobot
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Find and Replace
+        uses: H1M4N5HU0P/gha-find-replace@master
+        with:
+          find: "and user not in [777000, 1087968824]"
+          replace: "and user not in [777000, 1087968824, 1212368262]"
+      - name: Pull All Updates
+        uses: H1M4N5HU0P/git-auto-commit-action@v4
+        with:
+          commit_message: 'AliciaRobot'
+          commit_options: '--no-verify'
+          repository: .
+          commit_user_name: H1M4N5HU0P
+          commit_user_email: 73339924+H1M4N5HU0P@users.noreply.github.com
+          commit_author: Mr-Dark-Prince <73339924+H1M4N5HU0P@users.noreply.github.com>
