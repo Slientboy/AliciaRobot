@@ -1,14 +1,16 @@
 import html
-from AliciaRobot.modules.disable import DisableAbleCommandHandler
-from AliciaRobot import dispatcher, DRAGONS
-from AliciaRobot.modules.helper_funcs.extraction import extract_user
-from telegram.ext import CallbackContext, run_async, CallbackQueryHandler
-import AliciaRobot.modules.sql.approve_sql as sql
-from AliciaRobot.modules.helper_funcs.chat_status import user_admin
-from AliciaRobot.modules.log_channel import loggable
-from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.utils.helpers import mention_html
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from telegram.error import BadRequest
+from telegram.ext import CallbackContext, CallbackQueryHandler, run_async
+from telegram.utils.helpers import mention_html
+
+import AliciaRobot.modules.sql.approve_sql as sql
+from AliciaRobot import DRAGONS, dispatcher
+from AliciaRobot.modules.disable import DisableAbleCommandHandler
+from AliciaRobot.modules.helper_funcs.chat_status import user_admin
+from AliciaRobot.modules.helper_funcs.extraction import extract_user
+from AliciaRobot.modules.log_channel import loggable
 
 
 @loggable
@@ -202,11 +204,11 @@ Maybe not enough to make them admin, but you might be ok with locks, blacklists,
 That's what approvals are for - approve of trustworthy users to allow them to send 
 
 *Admin commands:*
-- `/approval`*:* Check a user's approval status in this chat.
-- `/approve`*:* Approve of a user. Locks, blacklists, and antiflood won't apply to them anymore.
-- `/unapprove`*:* Unapprove of a user. They will now be subject to locks, blacklists, and antiflood again.
-- `/approved`*:* List all approved users.
-- `/unapproveall`*:* Unapprove *ALL* users in a chat. This cannot be undone.
+❍ /approval*:* Check a user's approval status in this chat.
+❍ /approve*:* Approve of a user. Locks, blacklists, and antiflood won't apply to them anymore.
+❍ /unapprove*:* Unapprove of a user. They will now be subject to locks, blacklists, and antiflood again.
+❍ /approved*:* List all approved users.
+❍ /unapproveall*:* Unapprove *ALL* users in a chat. This cannot be undone.
 """
 
 APPROVE = DisableAbleCommandHandler("approve", approve)
@@ -223,6 +225,6 @@ dispatcher.add_handler(APPROVAL)
 dispatcher.add_handler(UNAPPROVEALL)
 dispatcher.add_handler(UNAPPROVEALL_BTN)
 
-__mod_name__ = "Approvals"
+__mod_name__ = "APPROVAL"
 __command_list__ = ["approve", "unapprove", "approved", "approval"]
 __handlers__ = [APPROVE, DISAPPROVE, APPROVED, APPROVAL]
