@@ -10,7 +10,7 @@ updates.txt
 # Session files
 AliciaRobot/*.session
 AliciaRobot/*.session-journal
-alicia.session-journal
+Alicia.session-journal
 *.session
 
 # Byte-compiled / optimized / DLL files
