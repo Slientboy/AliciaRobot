@@ -74,35 +74,45 @@ def get_readable_time(seconds: int) -> str:
 
 
 PM_START_TEXT = """
-Hi {}, my name is {}! 
-I'm a group manager bot. Rent me for your group if you want🥰.
-You can find my list of available commands with /help.
+`Hellow` [🤗](https://telegra.ph/file/6937614341f42020a2ebc.jpg) `My name is` *Alicia*
+`I'm here to help you manage your groups! Hit` *📚Commands* `button below to find out more about how to use me to my full potential.` 
 """
 
+buttons = [
+    [
+        InlineKeyboardButton(
+            text="➕️ ADD Alicia TO YOUR GROUP ➕️", url="t.me/AliciaRobot?startgroup=true"),
+    ],
+    [
+        InlineKeyboardButton(text="🚨ADMINS", callback_data="adminmenu_"),
+        InlineKeyboardButton(text="👒USERS", callback_data="usermenu_"),
+        InlineKeyboardButton(text="🛡DEVS", callback_data="devmenu_"),
+    ],
+    [
+        InlineKeyboardButton(text="ℹ️ ABOUT", callback_data="Alicia_"),
+        InlineKeyboardButton(text="📚 COMMANDS", callback_data="help_back"),
+    ],
+    [
+        InlineKeyboardButton(
+            text="💾 SOURCE", callback_data="source_"),
+        InlineKeyboardButton(
+            text="👥 SUPPORT", url="https://t.me/wastebots"
+        ),
+    ],
+]
+
+
 HELP_STRINGS = """
-Hey there! My name is *{}*.
-I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of the things I can help you with.
-
-*Main* commands available:
- • /help: PM's you this message.
- • /help <module name>: PM's you info about that module.
- • /settings:
-   • in PM: will send you your settings for all supported modules.
-   • in a group: will redirect you to pm, with all that chat's settings.
+`Hi.. I'm` [Alicia🙋‍♀️](https://telegra.ph/file/6937614341f42020a2ebc.jpg)
+`Click on the buttons below to get documentation about specific modules..`"""
 
 
-{}
-And the following:
-""".format(
-    dispatcher.bot.first_name, ""
-    if not ALLOW_EXCL else "\nAll commands can either be used with / or !.\n")
-
-ALICIA_IMG = "https://telegra.ph/file/2db636b075b8d25748097.jpg"
+ALICIA_IMG = "https://telegra.ph/file/6937614341f42020a2ebc.jpg"
 
 DONATE_STRING = """Heya, glad to hear you want to donate!
-Alicia is hosted on one of Kaizoku's Servers and doesn't require any donations as of now but \
-You can donate to the original writer of the Base code, Paul
-There are two ways of supporting him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
+ You can support the project via [Paypal](ko-fi.com/sawada) or by contacting @Sawada \
+ Supporting isnt always financial! \
+ Those who cannot provide monetary support are welcome to help us develop the bot at @OnePunchDev."""
 
 IMPORTED = {}
 MIGRATEABLE = []
@@ -405,6 +415,33 @@ def Admin_about_callback(update, context):
             ),
         )
 
+
+@run_async
+def Source_about_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    if query.data == "source_":
+        query.message.edit_text(
+            text=""" Hi..🤗 I'm *Alicia*
+                 \nHere is the [Source Code](https://github.com/Mr-Dark-Prince/AliciaRobot) .""",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=True,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                 [
+                    InlineKeyboardButton(text="Go Back", callback_data="source_back")
+                 ]
+                ]
+            ),
+        )
+    elif query.data == "source_back":
+        query.message.edit_text(
+                PM_START_TEXT,
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode=ParseMode.MARKDOWN,
+                timeout=60,
+                disable_web_page_preview=False,
+        )
+
 @run_async
 def get_help(update: Update, context: CallbackContext):
     chat = update.effective_chat  # type: Optional[Chat]
@@ -691,11 +728,30 @@ def main():
     test_handler = CommandHandler("test", test)
     start_handler = CommandHandler("start", start)
 
+    help_handler = CommandHandler("help", get_help)
+    help_callback_handler = CallbackQueryHandler(help_button, pattern=r"help_.*")
+
+    settings_handler = CommandHandler("settings", get_settings)
+    settings_callback_handler = CallbackQueryHandler(settings_button, pattern=r"stngs_")
+
+    about_callback_handler = CallbackQueryHandler(Alicia_about_callback, pattern=r"Alicia_")
+    source_callback_handler = CallbackQueryHandler(Source_about_callback, pattern=r"source_")
+    admin_callback_handler = CallbackQueryHandler(Admin_about_callback, pattern=r"adminmenu_")
+
+    donate_handler = CommandHandler("donate", donate)
     migrate_handler = MessageHandler(Filters.status_update.migrate, migrate_chats)
 
     # dispatcher.add_handler(test_handler)
     dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(about_callback_handler)
+    dispatcher.add_handler(source_callback_handler)
+    dispatcher.add_handler(admin_callback_handler)
+    dispatcher.add_handler(settings_handler)
+    dispatcher.add_handler(help_callback_handler)
+    dispatcher.add_handler(settings_callback_handler)
     dispatcher.add_handler(migrate_handler)
+    dispatcher.add_handler(donate_handler)
 
     dispatcher.add_error_handler(error_callback)
 
