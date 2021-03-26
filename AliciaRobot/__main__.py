@@ -168,6 +168,7 @@ for module_name in ALL_MODULES:
         USER_SETTINGS[imported_module.__mod_name__.lower()] = imported_module
 
 
+
 # do not async
 def send_help(chat_id, text, keyboard=None):
     if not keyboard:
@@ -177,8 +178,7 @@ def send_help(chat_id, text, keyboard=None):
         text=text,
         parse_mode=ParseMode.MARKDOWN,
         disable_web_page_preview=True,
-        reply_markup=keyboard,
-    )
+        reply_markup=keyboard)
 
 
 @run_async
@@ -198,71 +198,63 @@ def start(update: Update, context: CallbackContext):
             if args[0].lower() == "help":
                 send_help(update.effective_chat.id, HELP_STRINGS)
             elif args[0].lower().startswith("ghelp_"):
-                mod = args[0].lower().split("_", 1)[1]
+                mod = args[0].lower().split('_', 1)[1]
                 if not HELPABLE.get(mod, False):
                     return
                 send_help(
-                    update.effective_chat.id,
-                    HELPABLE[mod].__help__,
-                    InlineKeyboardMarkup(
-                        [[InlineKeyboardButton(text="⬅️ BACK", callback_data="help_back")]]
-                    ),
-                )
-
+                    update.effective_chat.id, HELPABLE[mod].__help__,
+                    InlineKeyboardMarkup([[
+                        InlineKeyboardButton(
+                            text="Back", callback_data="help_back")
+                    ]]))
+            elif args[0].lower() == "markdownhelp":
+                IMPORTED["extras"].markdown_help_sender(update)
+            elif args[0].lower() == "disasters":
+                IMPORTED["disasters"].send_disasters(update)
             elif args[0].lower().startswith("stngs_"):
                 match = re.match("stngs_(.*)", args[0].lower())
                 chat = dispatcher.bot.getChat(match.group(1))
 
                 if is_user_admin(chat, update.effective_user.id):
-                    send_settings(match.group(1), update.effective_user.id, False)
+                    send_settings(
+                        match.group(1), update.effective_user.id, False)
                 else:
-                    send_settings(match.group(1), update.effective_user.id, True)
+                    send_settings(
+                        match.group(1), update.effective_user.id, True)
 
             elif args[0][1:].isdigit() and "rules" in IMPORTED:
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
-            update.effective_message.reply_text(
-                PM_START_TEXT,
-                reply_markup=InlineKeyboardMarkup(buttons),
+            first_name = update.effective_user.first_name
+            update.effective_message.reply_photo(
+                ALICIA_IMG,
+                PM_START_TEXT.format(
+                    escape_markdown(first_name),
+                    escape_markdown(context.bot.first_name)),
                 parse_mode=ParseMode.MARKDOWN,
-                timeout=60,
-            )
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(
+                    [[
+                        InlineKeyboardButton(
+                            text="☑️ Add Alicia to your group",
+                            url="t.me/{}?startgroup=true".format(
+                                context.bot.username))
+                    ],
+                     [
+                         InlineKeyboardButton(
+                             text="🚑 Support Group",
+                             url=f"https://t.me/{SUPPORT_CHAT}"),
+                         InlineKeyboardButton(
+                             text="🔔 Updates Channel",
+                             url="https://t.me/MafiaBot_Support")
+                     ]
+                    ]))
     else:
         update.effective_message.reply_text(
-            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>".format(
-                uptime
-            ),
-            parse_mode=ParseMode.HTML,
-        )
-
-
-def error_handler(update, context):
-    """Log the error and send a telegram message to notify the developer."""
-    # Log the error before we do anything else, so we can see it even if something breaks.
-    LOGGER.error(msg="Exception while handling an update:", exc_info=context.error)
-
-    # traceback.format_exception returns the usual python message about an exception, but as a
-    # list of strings rather than a single string, so we have to join them together.
-    tb_list = traceback.format_exception(
-        None, context.error, context.error.__traceback__
-    )
-    tb = "".join(tb_list)
-
-    # Build the message with some markup and additional information about what happened.
-    message = (
-        "An exception was raised while handling an update\n"
-        "<pre>update = {}</pre>\n\n"
-        "<pre>{}</pre>"
-    ).format(
-        html.escape(json.dumps(update.to_dict(), indent=2, ensure_ascii=False)),
-        html.escape(tb),
-    )
-
-    if len(message) >= 4096:
-        message = message[:4096]
-    # Finally, send the message
-    context.bot.send_message(chat_id=OWNER_ID, text=message, parse_mode=ParseMode.HTML)
+            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>"
+            .format(uptime),
+            parse_mode=ParseMode.HTML)
 
 
 # for test purposes
