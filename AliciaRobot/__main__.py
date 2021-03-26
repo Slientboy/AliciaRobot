@@ -104,24 +104,6 @@ Alicia is hosted on one of Kaizoku's Servers and doesn't require any donations a
 You can donate to the original writer of the Base code, Paul
 There are two ways of supporting him; [PayPal](paypal.me/PaulSonOfLars), or [Monzo](monzo.me/paulnionvestergaardlarsen)."""
 
-
-buttons = [
-    [
-        InlineKeyboardButton(
-            text="➕️ ADD ALICIA TO YOUR GROUP ➕️", url="t.me/AliciaGroup_bot?startgroup=true"),
-    ],
-    [
-        InlineKeyboardButton(text="📚 COMMANDS", callback_data="help_back"),
-    ],
-    [
-        InlineKeyboardButton(
-            text="👥 SUPPORT", url="https://t.me/MafiaBot_Support"
-        ),
-    ],
-]
-
-
-
 IMPORTED = {}
 MIGRATEABLE = []
 HELPABLE = {}
@@ -168,7 +150,6 @@ for module_name in ALL_MODULES:
         USER_SETTINGS[imported_module.__mod_name__.lower()] = imported_module
 
 
-
 # do not async
 def send_help(chat_id, text, keyboard=None):
     if not keyboard:
@@ -178,7 +159,8 @@ def send_help(chat_id, text, keyboard=None):
         text=text,
         parse_mode=ParseMode.MARKDOWN,
         disable_web_page_preview=True,
-        reply_markup=keyboard)
+        reply_markup=keyboard,
+    )
 
 
 @run_async
@@ -198,63 +180,71 @@ def start(update: Update, context: CallbackContext):
             if args[0].lower() == "help":
                 send_help(update.effective_chat.id, HELP_STRINGS)
             elif args[0].lower().startswith("ghelp_"):
-                mod = args[0].lower().split('_', 1)[1]
+                mod = args[0].lower().split("_", 1)[1]
                 if not HELPABLE.get(mod, False):
                     return
                 send_help(
-                    update.effective_chat.id, HELPABLE[mod].__help__,
-                    InlineKeyboardMarkup([[
-                        InlineKeyboardButton(
-                            text="Back", callback_data="help_back")
-                    ]]))
-            elif args[0].lower() == "markdownhelp":
-                IMPORTED["extras"].markdown_help_sender(update)
-            elif args[0].lower() == "disasters":
-                IMPORTED["disasters"].send_disasters(update)
+                    update.effective_chat.id,
+                    HELPABLE[mod].__help__,
+                    InlineKeyboardMarkup(
+                        [[InlineKeyboardButton(text="⬅️ BACK", callback_data="help_back")]]
+                    ),
+                )
+
             elif args[0].lower().startswith("stngs_"):
                 match = re.match("stngs_(.*)", args[0].lower())
                 chat = dispatcher.bot.getChat(match.group(1))
 
                 if is_user_admin(chat, update.effective_user.id):
-                    send_settings(
-                        match.group(1), update.effective_user.id, False)
+                    send_settings(match.group(1), update.effective_user.id, False)
                 else:
-                    send_settings(
-                        match.group(1), update.effective_user.id, True)
+                    send_settings(match.group(1), update.effective_user.id, True)
 
             elif args[0][1:].isdigit() and "rules" in IMPORTED:
                 IMPORTED["rules"].send_rules(update, args[0], from_pm=True)
 
         else:
-            first_name = update.effective_user.first_name
-            update.effective_message.reply_photo(
-                ALICIA_IMG,
-                PM_START_TEXT.format(
-                    escape_markdown(first_name),
-                    escape_markdown(context.bot.first_name)),
+            update.effective_message.reply_text(
+                PM_START_TEXT,
+                reply_markup=InlineKeyboardMarkup(buttons),
                 parse_mode=ParseMode.MARKDOWN,
-                disable_web_page_preview=True,
-                reply_markup=InlineKeyboardMarkup(
-                    [[
-                        InlineKeyboardButton(
-                            text="☑️ Add Alicia to your group",
-                            url="t.me/{}?startgroup=true".format(
-                                context.bot.username))
-                    ],
-                     [
-                         InlineKeyboardButton(
-                             text="🚑 Support Group",
-                             url=f"https://t.me/{SUPPORT_CHAT}"),
-                         InlineKeyboardButton(
-                             text="🔔 Updates Channel",
-                             url="https://t.me/MafiaBot_Support")
-                     ]
-                    ]))
+                timeout=60,
+            )
     else:
         update.effective_message.reply_text(
-            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>"
-            .format(uptime),
-            parse_mode=ParseMode.HTML)
+            "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>".format(
+                uptime
+            ),
+            parse_mode=ParseMode.HTML,
+        )
+
+
+def error_handler(update, context):
+    """Log the error and send a telegram message to notify the developer."""
+    # Log the error before we do anything else, so we can see it even if something breaks.
+    LOGGER.error(msg="Exception while handling an update:", exc_info=context.error)
+
+    # traceback.format_exception returns the usual python message about an exception, but as a
+    # list of strings rather than a single string, so we have to join them together.
+    tb_list = traceback.format_exception(
+        None, context.error, context.error.__traceback__
+    )
+    tb = "".join(tb_list)
+
+    # Build the message with some markup and additional information about what happened.
+    message = (
+        "An exception was raised while handling an update\n"
+        "<pre>update = {}</pre>\n\n"
+        "<pre>{}</pre>"
+    ).format(
+        html.escape(json.dumps(update.to_dict(), indent=2, ensure_ascii=False)),
+        html.escape(tb),
+    )
+
+    if len(message) >= 4096:
+        message = message[:4096]
+    # Finally, send the message
+    context.bot.send_message(chat_id=OWNER_ID, text=message, parse_mode=ParseMode.HTML)
 
 
 # for test purposes
@@ -286,6 +276,134 @@ def error_callback(update: Update, context: CallbackContext):
         print(error)
         # handle all other telegram related errors
 
+
+@run_async
+def help_button(update, context):
+    query = update.callback_query
+    mod_match = re.match(r"help_module\((.+?)\)", query.data)
+    prev_match = re.match(r"help_prev\((.+?)\)", query.data)
+    next_match = re.match(r"help_next\((.+?)\)", query.data)
+    back_match = re.match(r"help_back", query.data)
+
+    print(query.message.chat.id)
+
+    try:
+        if mod_match:
+            module = mod_match.group(1)
+            text = (
+                "Here is the help for the *{}* module:\n".format(
+                    HELPABLE[module].__mod_name__
+                )
+                + HELPABLE[module].__help__
+            )
+            query.message.edit_text(
+                text=text,
+                parse_mode=ParseMode.MARKDOWN,
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton(text="Back", callback_data="help_back")]]
+                ),
+            )
+
+        elif prev_match:
+            curr_page = int(prev_match.group(1))
+            query.message.edit_text(
+                text=HELP_STRINGS,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(
+                    paginate_modules(curr_page - 1, HELPABLE, "help")
+                ),
+            )
+
+        elif next_match:
+            next_page = int(next_match.group(1))
+            query.message.edit_text(
+                text=HELP_STRINGS,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(
+                    paginate_modules(next_page + 1, HELPABLE, "help")
+                ),
+            )
+
+        elif back_match:
+            query.message.edit_text(
+                text=HELP_STRINGS,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=InlineKeyboardMarkup(
+                    paginate_modules(0, HELPABLE, "help")
+                ),
+            )
+
+        # ensure no spinny white circle
+        context.bot.answer_callback_query(query.id)
+        # query.message.delete()
+
+    except BadRequest:
+        pass
+
+
+@run_async
+def Alicia_about_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    if query.data == "Alicia_":
+        query.message.edit_text(
+            text=""" ℹ️ I'm *Alicia*, a powerful group management bot built to help you manage your group easily.
+                 \n❍ I can restrict users.
+                 \n❍ I can greet users with customizable welcome messages and even set a group's rules.
+                 \n❍ I have an advanced anti-flood system.
+                 \n❍ I can warn users until they reach max warns, with each predefined actions such as ban, mute, kick, etc.
+                 \n❍ I have a note keeping system, blacklists, and even predetermined replies on certain keywords.
+                 \n❍ I check for admins' permissions before executing any command and more stuffs
+                 \n\n_Alicia's licensed under the GNU General Public License v3.0_
+                 \nHere is the [💾Repository](https://github.com/Mr-Dark-Prince/AliciaRobot).
+                 \n\nIf you have any question about Alicia, let us know at @WasteBots.""",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=True,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                 [
+                    InlineKeyboardButton(text="Back", callback_data="Alicia_back")
+                 ]
+                ]
+            ),
+        )
+    elif query.data == "Alicia_back":
+        query.message.edit_text(
+                PM_START_TEXT,
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode=ParseMode.MARKDOWN,
+                timeout=60,
+                disable_web_page_preview=False,
+        )
+
+
+@run_async
+def Admin_about_callback(update, context):
+    query = update.callback_query
+    if query.data == "adminmenu_":
+        query.message.edit_text(
+            text=f"ADMIN MODULES",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=True,
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            text="ℹ️GROUP", callback_data="group_cmds"
+                        ),
+                        InlineKeyboardButton(
+                            text="BASIC", callback_data="basic_cmds"
+                        ),
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            text="❔Help & Commands", callback_data="help_back"
+                        )
+                    ],
+                    [InlineKeyboardButton(text="Back", callback_data="Alicia_back")],
+                ]
+            ),
+        )
 
 @run_async
 def get_help(update: Update, context: CallbackContext):
@@ -504,6 +622,41 @@ def get_settings(update: Update, context: CallbackContext):
         send_settings(chat.id, user.id, True)
 
 
+@run_async
+def donate(update: Update, context: CallbackContext):
+    user = update.effective_message.from_user
+    chat = update.effective_chat  # type: Optional[Chat]
+    bot = context.bot
+    if chat.type == "private":
+        update.effective_message.reply_text(
+            DONATE_STRING, parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True
+        )
+
+        if OWNER_ID != 254318997 and DONATION_LINK:
+            update.effective_message.reply_text(
+                "You can also donate to the person currently running me "
+                "[here]({})".format(DONATION_LINK),
+                parse_mode=ParseMode.MARKDOWN,
+            )
+
+    else:
+        try:
+            bot.send_message(
+                user.id,
+                DONATE_STRING,
+                parse_mode=ParseMode.MARKDOWN,
+                disable_web_page_preview=True,
+            )
+
+            update.effective_message.reply_text(
+                "I've PM'ed you about donating to my creator!"
+            )
+        except Unauthorized:
+            update.effective_message.reply_text(
+                "Contact me in PM first to get donation information."
+            )
+
+
 def migrate_chats(update: Update, context: CallbackContext):
     msg = update.effective_message  # type: Optional[Message]
     if msg.migrate_to_chat_id:
@@ -538,14 +691,19 @@ def main():
     test_handler = CommandHandler("test", test)
     start_handler = CommandHandler("start", start)
 
-    help_handler = CommandHandler("help", get_help)
-
     migrate_handler = MessageHandler(Filters.status_update.migrate, migrate_chats)
 
     # dispatcher.add_handler(test_handler)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(about_callback_handler)
+    dispatcher.add_handler(source_callback_handler)
+    dispatcher.add_handler(admin_callback_handler)
+    dispatcher.add_handler(settings_handler)
+    dispatcher.add_handler(help_callback_handler)
+    dispatcher.add_handler(settings_callback_handler)
     dispatcher.add_handler(migrate_handler)
+    dispatcher.add_handler(donate_handler)
 
     dispatcher.add_error_handler(error_callback)
 
