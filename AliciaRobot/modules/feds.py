@@ -171,7 +171,7 @@ def del_fed(update: Update, context: CallbackContext):
             [
                 [
                     InlineKeyboardButton(
-                        text="?ая? Delete Federation ?ая?",
+                        text=" Delete Federation ",
                         callback_data="rmfed_{}".format(fed_id),
                     )
                 ],
@@ -493,7 +493,7 @@ def fed_info(update: Update, context: CallbackContext):
     chat = update.effective_chat
     info = sql.get_fed_info(fed_id)
 
-    text = "<b>?╣я? Federation Information:</b>"
+    text = "<b>Federation Information:</b>"
     text += "\nFedID: <code>{}</code>".format(fed_id)
     text += "\nName: {}".format(info["fname"])
     text += "\nCreator: {}".format(mention_html(owner.id, owner_name))
