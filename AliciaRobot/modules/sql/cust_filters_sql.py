@@ -187,7 +187,7 @@ def add_filter(
         add_note_button_to_db(chat_id, keyword, b_name, url, same_line)
 
 
-def addnew_filter(chat_id, keyword, reply_text, file_type, file_id, buttons):
+def new_add_filter(chat_id, keyword, reply_text, file_type, file_id, buttons):
     global CHAT_FILTERS
 
     if buttons is None:
